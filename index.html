@@ -2,132 +2,418 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LTS Login</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Firebase Login System</title>
 
 <style>
+
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
 }
 
 body{
-    width:100%;
-    height:100vh;
-    background:#000;
-    font-family:Arial, sans-serif;
-    position:relative;
+background:#000;
+color:#fff;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:20px;
 }
 
-/* LOGIN TEXT */
-.login-text{
-    position:absolute;
-    top:40%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    color:#fff;
-    font-size:20px;
-    font-weight:bold;
+.container{
+width:100%;
+max-width:400px;
+background:#111;
+padding:25px;
+border-radius:20px;
+box-shadow:0 0 20px rgba(0,255,0,0.2);
 }
 
-/* INPUT BOX WRAPPER */
-.input-box{
-    position:absolute;
-    top:50%;
-    left:20px;
-    width:280px;
-    border-bottom:2px solid #fff;
+h1{
+text-align:center;
+margin-bottom:20px;
+font-size:28px;
 }
 
-/* INPUT */
-.name-input{
-    width:100%;
-    padding:8px 0;
-    background:transparent;
-    border:none;
-    color:#fff;
-    font-size:16px;
-    outline:none;
+input{
+width:100%;
+padding:15px;
+margin-top:12px;
+border:none;
+border-radius:12px;
+background:#222;
+color:#fff;
+font-size:16px;
+outline:none;
 }
 
-/* REGISTER TEXT */
-.register{
-    position:absolute;
-    right:-40px;   /* 🔥 තව දකුනට */
-    bottom:-22px;
-    color:#fff;
-    font-size:12px;
-    font-weight:bold;
-    cursor:pointer;
-    letter-spacing:1px;
+button{
+width:100%;
+padding:15px;
+margin-top:12px;
+border:none;
+border-radius:12px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+transition:0.2s;
 }
 
-.register:hover{
-    color:#00ffcc;
+.signupBtn{
+background:lime;
+color:#000;
 }
 
-/* ERROR */
-.error-text{
-    position:absolute;
-    top:58%;
-    left:20px;
-    color:red;
-    font-size:14px;
-    font-weight:bold;
-    display:none;
+.loginBtn{
+background:#00bfff;
+color:#fff;
 }
+
+.googleBtn{
+background:#fff;
+color:#000;
+}
+
+.logoutBtn{
+background:red;
+color:#fff;
+}
+
+button:active{
+transform:scale(0.98);
+}
+
+#userBox{
+display:none;
+margin-top:20px;
+background:#1a1a1a;
+padding:20px;
+border-radius:15px;
+text-align:center;
+}
+
+#profilePhoto{
+width:90px;
+height:90px;
+border-radius:50%;
+object-fit:cover;
+border:3px solid lime;
+margin-bottom:15px;
+}
+
+.userText{
+margin-top:10px;
+font-size:16px;
+word-break:break-word;
+}
+
 </style>
-
 </head>
 <body>
 
-<div class="login-text">LOGIN</div>
+<div class="container">
 
-<div class="input-box">
-    <input 
-        type="text"
-        class="name-input"
-        id="keyInput"
-        placeholder="ENTER 9 DIGIT CODE"
-        maxlength="9"
-    >
-    <div class="register" onclick="openWhatsApp()">REGISTER</div>
+<h1>LOGIN SYSTEM</h1>
+
+<input
+type="email"
+id="email"
+placeholder="Enter Email">
+
+<input
+type="password"
+id="password"
+placeholder="Enter Password">
+
+<button
+class="signupBtn"
+onclick="signup()">
+SIGN UP
+</button>
+
+<button
+class="loginBtn"
+onclick="login()">
+LOGIN
+</button>
+
+<button
+class="googleBtn"
+onclick="googleLogin()">
+LOGIN WITH GOOGLE
+</button>
+
+<div id="userBox">
+
+<img
+id="profilePhoto"
+src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+
+<h2 id="name"></h2>
+
+<div
+class="userText"
+id="welcome">
 </div>
 
-<div class="error-text" id="errorText">ERROR: INVALID CODE</div>
+<div
+class="userText"
+id="uid">
+</div>
 
-<script>
-const input = document.getElementById("keyInput");
-const errorText = document.getElementById("errorText");
+<div
+class="userText"
+id="coins">
+</div>
 
-input.addEventListener("input", function () {
+<button
+class="logoutBtn"
+onclick="logout()">
+LOGOUT
+</button>
 
-    this.value = this.value.replace(/\D/g, "");
-    errorText.style.display = "none";
+</div>
 
-    if (this.value.length === 9) {
+</div>
 
-        let page = this.value + ".html";
+<script type="module">
 
-        fetch(page, { method: "HEAD" })
-        .then(res => {
-            if (res.ok) {
-                window.location.href = page;
-            } else {
-                errorText.style.display = "block";
-            }
-        })
-        .catch(() => {
-            errorText.style.display = "block";
-        });
-    }
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+
+getAuth,
+
+createUserWithEmailAndPassword,
+
+signInWithEmailAndPassword,
+
+GoogleAuthProvider,
+
+signInWithPopup,
+
+signOut,
+
+onAuthStateChanged
+
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+
+getDatabase,
+
+ref,
+
+set,
+
+get,
+
+child
+
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyDdlxuM-11z-ahfHyPSPQeabds02s9C8ag",
+
+authDomain: "project-001-1v.firebaseapp.com",
+
+databaseURL:
+"https://project-001-1v-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+projectId: "project-001-1v",
+
+storageBucket:
+"project-001-1v.firebasestorage.app",
+
+messagingSenderId:
+"778010407586",
+
+appId:
+"1:778010407586:web:3b527def1374705d4dddfb",
+
+measurementId:
+"G-VG8EYJBH3B"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getDatabase(app);
+
+const provider = new GoogleAuthProvider();
+
+window.signup = function(){
+
+const email =
+document.getElementById("email").value;
+
+const password =
+document.getElementById("password").value;
+
+if(email=="" || password==""){
+
+alert("Enter Email & Password");
+return;
+
+}
+
+createUserWithEmailAndPassword(
+auth,
+email,
+password
+)
+
+.then((userCredential)=>{
+
+const user = userCredential.user;
+
+set(ref(db,'users/' + user.uid),{
+
+email:email,
+name:"User",
+photo:"https://cdn-icons-png.flaticon.com/512/149/149071.png",
+coins:0
+
 });
 
-/* WHATSAPP REGISTER */
-function openWhatsApp(){
-    window.location.href = "https://wa.me/94702564087";
+alert("Account Created");
+
+})
+
+.catch((error)=>{
+
+alert(error.message);
+
+});
+
 }
+
+window.login = function(){
+
+const email =
+document.getElementById("email").value;
+
+const password =
+document.getElementById("password").value;
+
+signInWithEmailAndPassword(
+auth,
+email,
+password
+)
+
+.then(()=>{
+
+alert("Login Success");
+
+})
+
+.catch((error)=>{
+
+alert(error.message);
+
+});
+
+}
+
+window.googleLogin = function(){
+
+signInWithPopup(auth, provider)
+
+.then((result)=>{
+
+const user = result.user;
+
+set(ref(db,'users/' + user.uid),{
+
+email:user.email,
+name:user.displayName,
+photo:user.photoURL,
+coins:0
+
+});
+
+alert("Google Login Success");
+
+})
+
+.catch((error)=>{
+
+alert(error.message);
+
+});
+
+}
+
+window.logout = function(){
+
+signOut(auth);
+
+}
+
+onAuthStateChanged(auth,(user)=>{
+
+if(user){
+
+document.getElementById("userBox")
+.style.display = "block";
+
+get(child(
+ref(db),
+"users/" + user.uid
+))
+
+.then((snapshot)=>{
+
+if(snapshot.exists()){
+
+const data = snapshot.val();
+
+document.getElementById("name")
+.innerHTML =
+data.name || "User";
+
+document.getElementById("welcome")
+.innerHTML =
+"Email : " + data.email;
+
+document.getElementById("uid")
+.innerHTML =
+"UID : " + user.uid;
+
+document.getElementById("coins")
+.innerHTML =
+"Coins : " + data.coins;
+
+document.getElementById("profilePhoto")
+.src =
+data.photo;
+
+}
+
+});
+
+}else{
+
+document.getElementById("userBox")
+.style.display = "none";
+
+}
+
+});
+
 </script>
 
 </body>
